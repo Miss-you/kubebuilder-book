@@ -19,10 +19,6 @@ Kubernetes用户将通过学习如何设计和实现API背后的基本概念，�
 
 #### Kubernetes API 开发者
 
-API扩展开发人员将学习到实现canonical的原理和概念
-Kubernetes API，以及用于快速执行的简单工具和库。 这
-这本书涵盖了扩展开发者经常遇到的陷阱和误区。
-
 API扩展开发者将学习到实现 Kubernetes API 的原理和概念，以及一些用于加快开发的工具和库。本书涵盖了 Kubernetes API 开发者经常遇到的陷阱和误区。
 
 内容如下：
@@ -41,8 +37,5 @@ API扩展开发者将学习到实现 Kubernetes API 的原理和概念，以及�
 ## 资源
 
 * 项目: [sigs.k8s.io/kubebuilder](https://sigs.k8s.io/kubebuilder)
-
-* Slack : [#kubebuilder](http://slack.k8s.io/#kubebuilder)
-
-* Google Group:
-  [kubebuilder@googlegroups.com](https://groups.google.com/forum/#!forum/kubebuilder)
+* Slack: [#kubebuilder](http://slack.k8s.io/#kubebuilder)
+* Google Group: [kubebuilder@googlegroups.com](https://groups.google.com/forum/#!forum/kubebuilder)
