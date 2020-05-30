@@ -6,10 +6,16 @@
   - [依赖组件](#依赖组件)
   - [安装](#安装)
   - [创建一个项目](#创建一个项目)
+      - [如果你的安装目录不在 `$GOPATH` 中](#如果你的安装目录不在-gopath-中)
+      - [Go package 问题](#go-package-问题)
   - [创建一个 API](#创建一个-api)
+      - [创建选项](#创建选项)
+      - [示例](#示例)
   - [测试](#测试)
+      - [使用的上下文](#使用的上下文)
   - [安装 CR 实例](#安装-cr-实例)
   - [如何在集群中运行](#如何在集群中运行)
+      - [RBAC 错误](#rbac-错误)
   - [卸载 CRD](#卸载-crd)
   - [下一步](#下一步)
 
@@ -52,42 +58,31 @@ cd $GOPATH/src/example
 kubebuilder init --domain my.domain
 ```
 
-<aside class="note">
-<h1> 如果你的安装目录不在 `$GOPATH` 中 </h1>
+#### 如果你的安装目录不在 `$GOPATH` 中
 
 如果你的 kubebuilder 安装目录不在 `$GOPATH` 中，你需要运行 `go mod init <modulename>` 来告诉 kubebuilder 和 Go module 的基本导入路径。
 
 若要进一步了解 `GOPATH`，参阅 [如何编写Go代码][how-to-write-go-code-golang-docs] 页面文档中的 [GOPATH 环境变量][GOPATH-golang-docs] 章节。   
-</aside>
 
-<aside class="note">
-<h1> Go package 问题 </h1>
+#### Go package 问题 
+
 确保你已经执行 `$ export GO111MODULE=on` 命令来激活模块支持，以解决像 `cannot find package .... (from $GOROOT)` 这样的问题。
-</aside>
 
 ## 创建一个 API
 
-Run the following command to create a new API (group/version) as `webapp/v1` and the new Kind(CRD) `Guestbook` on it:
+运行下面的命令，创建一个新的API（组/版本）为 "webapp/v1"，并在上面创建新的 Kind(CRD) "Guestbook"。
 
 ```bash
 kubebuilder create api --group webapp --version v1 --kind Guestbook
 ```
 
-<aside class="note">
-<h1>Press Options</h1>
+#### 创建选项
 
-If you press `y` for Create Resource [y/n] and for Create Controller [y/n] then this will create the files `api/v1/guestbook_types.go` where the API is defined 
-and the `controller/guestbook_controller.go` where the reconciliation business logic is implemented for this Kind(CRD).
+如果你在 Create Resource [y/n] 和 Create Controller [y/n] 中按`y`，那么这将创建文件 `api/v1/guestbook_types.go` ，该文件中定义相关 API ，而针对于这一类型 (CRD) 的对账业务逻辑生成在 `controller/guestbook_controller.go` 文件中。
 
-</aside>
+**可选项：** 编辑API定义和对账业务逻辑。更多信息请参见[设计一个API](/cronjob-tutorial/api-design.md)和[控制器](cronjob-tutorial/controller-overview.md)。
 
-
-**OPTIONAL:** Edit the API definition and the reconciliation business
-logic. For more info see [Designing an API](/cronjob-tutorial/api-design.md) and [What's in
-a Controller](cronjob-tutorial/controller-overview.md).
-
-<details><summary>Click here to see an example. `(api/v1/guestbook_types.go)` </summary>
-<p>
+#### 示例
 
 ```go
 // GuestbookSpec defines the desired state of Guestbook
@@ -130,39 +125,29 @@ type Guestbook struct {
 }
 ```
 
-</p>
-</details>
-
-
 ## 测试
 
-You'll need a Kubernetes cluster to run against.  You can use
-[KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or
-run against a remote cluster.
+你需要一个Kubernetes集群来运行。 你可以使用[KIND](https://sigs.k8s.io/kind)来获取一个本地集群进行测试，也可以在远程集群上运行。
 
-<aside class="note">
-<h1>Context Used</h1>
+#### 使用的上下文
 
-Your controller will automatically use the current context in your
-kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+你的控制器将自动使用你的 `kubeconfig` 文件中的当前上下文(即无论群集 `kubectl cluster-info` 显示的是什么群集)。
 
-</aside> 
+将CRD安装到集群中
 
-Install the CRDs into the cluster:
 ```bash
 make install
 ```
 
-Run your controller (this will run in the foreground, so switch to a new
-terminal if you want to leave it running):
+运行控制器（这将在前台运行，如果你想让它一直运行，请切换到新的终端）。
+
 ```bash
 make run
 ```
 
 ## 安装 CR 实例
 
-If you pressed `y` for Create Resource [y/n] then you created an (CR)Custom Resource for your (CRD)Custom Resource Definition in your samples (make sure to edit them first if you've changed the
-API definition):
+如果你按了 `y` 创建资源[y/n]，那么你就为示例中的自定义资源定义 `CRD` 创建了一个自定义资源 `CR` (如果你更改了API定义，请务必先编辑它们)。
 
 ```bash
 kubectl apply -f config/samples/
@@ -170,29 +155,26 @@ kubectl apply -f config/samples/
 
 ## 如何在集群中运行
 
-Build and push your image to the location specified by `IMG`:
+构建并推送你的镜像到 `IMG` 指定的位置。
 
 ```bash
 make docker-build docker-push IMG=<some-registry>/<project-name>:tag
 ```
 
-Deploy the controller to the cluster with image specified by `IMG`:
+根据 `IMG` 指定的镜像将控制器部署到集群中。
+
 
 ```bash
 make deploy IMG=<some-registry>/<project-name>:tag
 ```
 
-<aside class="note">
-<h1>RBAC errors</h1>
+#### RBAC 错误
 
-If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin. See [Prerequisites for using Kubernetes RBAC on GKE cluster v1.11.x and older][pre-rbc-gke] which may be your case.  
-
-</aside> 
+如果你遇到RBAC错误，你可能需要授予自己集群管理员权限或以管理员身份登录。请参考[在GKE集群 v1.11.x 及以上版本上使用 Kubernetes RBAC 的组件依赖][pre-rbc-gke]可能是你的情况。 
 
 ## 卸载 CRD
 
-To delete your CRDs from the cluster:
+从你的集群中删除 CRD
 
 ```bash
 make uninstall
@@ -200,7 +182,7 @@ make uninstall
 
 ## 下一步 
 
-Now, follow up the [CronJob tutorial][cronjob-tutorial] to better understand how it works by developing a demo example project. 
+现在，参照[CronJob教程][cronjob-tutorial]，通过开发一个演示示例项目更好地理解 kubebuilder 的工作原理。
 
 [pre-rbc-gke]:https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control#iam-rolebinding-bootstrap
 [cronjob-tutorial]: https://book.kubebuilder.io/cronjob-tutorial/cronjob-tutorial.html
