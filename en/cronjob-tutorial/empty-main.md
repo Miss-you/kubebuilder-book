@@ -1,5 +1,107 @@
-# Every journey needs a start, every program a main
+# 每段旅程需要一个起点，每个程序需要一个入口函数
 
-{{#literatego ./testdata/emptymain.go}}
+我们的 main 文件最开始是 import 一些基本库，尤其是：
 
-With that out of the way, we can get on to scaffolding our API!
+- 核心的 [控制器运行时](https://godoc.org/sigs.k8s.io/controller-runtime) 库
+- 默认的控制器运行时日志库-- Zap (后续会对它作更多的介绍)
+
+```go
+package main
+
+import (
+    "flag"
+    "fmt"
+    "os"
+
+    "k8s.io/apimachinery/pkg/runtime"
+    _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+    ctrl "sigs.k8s.io/controller-runtime"
+    "sigs.k8s.io/controller-runtime/pkg/cache"
+    "sigs.k8s.io/controller-runtime/pkg/log/zap"
+    // +kubebuilder:scaffold:imports
+)
+```
+
+每一组控制器都需要一个 [*Scheme*](https://book.kubebuilder.io/cronjob-tutorial/gvks.html#err-but-whats-that-scheme-thing)，它提供了 Kinds 和相应的 Go 类型之间的映射。我们将在编写 API 定义的时候再谈一谈 Kinds，所以现在只需要记住它就好。
+
+```go
+var (
+    scheme   = runtime.NewScheme()
+    setupLog = ctrl.Log.WithName("setup")
+)
+
+func init() {
+
+    // +kubebuilder:scaffold:scheme
+}
+```
+
+At this point, our main function is fairly simple:
+
+- We set up some basic flags for metrics.
+- We instantiate a [*manager*](https://godoc.org/sigs.k8s.io/controller-runtime/pkg/manager#Manager), which keeps track of running all of our controllers, as well as setting up shared caches and clients to the API server (notice we tell the manager about our Scheme).
+- We run our manager, which in turn runs all of our controllers and webhooks. The manager is set up to run until it receives a graceful shutdown signal. This way, when we’re running on Kubernetes, we behave nicely with graceful pod termination.
+
+While we don’t have anything to run just yet, remember where that `+kubebuilder:scaffold:builder` comment is -- things’ll get interesting there soon.
+
+这段代码的核心逻辑比较简单。
+
+- 我们通过 flag 库解析入参
+- 我们实例化了一个[*manager*](https://godoc.org/sigs.k8s.io/controller-runtime/pkg/manager#Manager)，它记录着我们所有控制器的运行情况，以及设置共享缓存和API服务器的客户端（注意，我们把我们的 Scheme 的信息告诉了 manager）。
+- 运行 manager，它反过来运行我们所有的控制器和 webhooks。manager 状态被设置为运行中，直到它收到一个优雅停机 (graceful shutdown) 信号。这样一来，当我们在 Kubernetes 上运行时，我们就可以优雅地停止 pod。
+
+虽然我们现在还没有任何业务代码可供执行，但请记住 `+kubebuilder:scaffold:builder` 的注释 --- 事情很快就会变得有趣起来。
+
+```go
+func main() {
+    var metricsAddr string
+    flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+    flag.Parse()
+
+    ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
+    mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{Scheme: scheme, MetricsBindAddress: metricsAddr})
+    if err != nil {
+        setupLog.Error(err, "unable to start manager")
+        os.Exit(1)
+    }
+```
+
+注意：Manager 可以通过以下方式限制控制器可以监听资源的命名空间。
+
+```go
+    mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+        Scheme:             scheme,
+        Namespace:          namespace,
+        MetricsBindAddress: metricsAddr,
+    })
+```
+
+上面的例子将把你的项目改成只监听单一的命名空间。在这种情况下，建议通过将默认的 ClusterRole 和 ClusterRoleBinding 分别替换为 Role 和RoleBinding 来限制所提供给这个命名空间的授权。
+
+另外，也可以使用 [MultiNamespacedCacheBuilder](https://godoc.org/github.com/kubernetes-sigs/controller-runtime/pkg/cache#MultiNamespacedCacheBuilder) 来监听特定的命名空间。
+
+```go
+    var namespaces []string // List of Namespaces
+
+    mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+        Scheme:             scheme,
+        NewCache:           cache.MultiNamespacedCacheBuilder(namespaces),
+        MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+    })
+```
+
+更多信息请参见 MultiNamespacedCacheBuilder
+
+```go
+    // +kubebuilder:scaffold:builder
+
+    setupLog.Info("starting manager")
+    if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+        setupLog.Error(err, "problem running manager")
+        os.Exit(1)
+    }
+}
+```
+
+说完这些，我们就可以开始搭建我们的 API 了!

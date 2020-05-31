@@ -8,11 +8,11 @@
 
 - [教程:构建 CronJob ](cronjob-tutorial/cronjob-tutorial.md)
 
-  - [基础项目里面有什么组件？](./cronjob-tutorial/basic-project.md)
-  - [main函数](./cronjob-tutorial/empty-main.md)
-  - [GVK介绍](./cronjob-tutorial/gvks.md)
-  - [添加一个API](./cronjob-tutorial/new-api.md)
-  - [设计一个API](./cronjob-tutorial/api-design.md)
+  - [基础项目组件介绍](./cronjob-tutorial/basic-project.md)
+  - [每段旅程需要一个起点，每个程序需要一个入口函数](./cronjob-tutorial/empty-main.md)
+  - [GVK 介绍](./cronjob-tutorial/gvks.md)
+  - [添加一个 API](./cronjob-tutorial/new-api.md)
+  - [设计一个 API](./cronjob-tutorial/api-design.md)
 
       - [浅谈: What's the rest of this stuff?](./cronjob-tutorial/other-api-files.md)
 
