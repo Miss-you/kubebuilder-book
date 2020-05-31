@@ -36,14 +36,6 @@ func init() {
 }
 ```
 
-At this point, our main function is fairly simple:
-
-- We set up some basic flags for metrics.
-- We instantiate a [*manager*](https://godoc.org/sigs.k8s.io/controller-runtime/pkg/manager#Manager), which keeps track of running all of our controllers, as well as setting up shared caches and clients to the API server (notice we tell the manager about our Scheme).
-- We run our manager, which in turn runs all of our controllers and webhooks. The manager is set up to run until it receives a graceful shutdown signal. This way, when we’re running on Kubernetes, we behave nicely with graceful pod termination.
-
-While we don’t have anything to run just yet, remember where that `+kubebuilder:scaffold:builder` comment is -- things’ll get interesting there soon.
-
 这段代码的核心逻辑比较简单。
 
 - 我们通过 flag 库解析入参
