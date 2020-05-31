@@ -8,7 +8,7 @@
 
 - [教程:构建 CronJob ](cronjob-tutorial/cronjob-tutorial.md)
 
-  - [基础项目包含组件介绍](./cronjob-tutorial/basic-project.md)
+  - [基础项目里面有什么组件？](./cronjob-tutorial/basic-project.md)
   - [main函数](./cronjob-tutorial/empty-main.md)
   - [GVK介绍](./cronjob-tutorial/gvks.md)
   - [添加一个API](./cronjob-tutorial/new-api.md)
