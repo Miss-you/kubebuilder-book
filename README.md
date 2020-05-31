@@ -50,3 +50,12 @@ Kubebuilder 是一个使用 CRDs 构建 Kubernetes API 的 SDK，主要功能有
 ## kubebuilder 好文推荐
 
 深入解析 Kubebuilder：让编写 CRD 变得更简单: https://www.cnblogs.com/alisystemsoftware/p/11580202.html
+
+## 作者介绍：
+
+yousa，任职于腾讯云，Apache APISIX PMC
+
+### 联系方式：
+
+微信：sytclmissyou
+邮箱：yousa@apache.com
