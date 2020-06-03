@@ -11,7 +11,7 @@ kubebuilder create api --group batch --version v1 --kind CronJob
 在这种情况下，[`api/v1/`](https://sigs.k8s.io/kubebuilder/docs/book/src/cronjob-tutorial/testdata/project/api/v1) 目录被创建了，对应于 `batch.tutorial.kubebuilder.io/v1` (还记得我们从一开始指定的 [`--domain` 配置](cronjob-tutorial.md#scaffolding-out-our-project) 吗？)
 
 它还为我们的 `CronJob` 类型添加了一个文件：`api/v1/cronjob_types.go`。每次我们对不同的 Kind 调用该命令时，它都会添加一个相应的新文件。
-
+ 
 Let's take a look at what we've been given out of the box, then we can move on to filling it out.
 
 let's see the [emptyapi.go](https://github.com/kubernetes-sigs/kubebuilder/blob/master/docs/book/src/cronjob-tutorial/testdata/emptyapi.go)
