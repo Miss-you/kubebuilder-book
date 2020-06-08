@@ -31,8 +31,9 @@ var (
 )
 
 func init() {
+	_ = clientgoscheme.AddToScheme(scheme)
 
-    // +kubebuilder:scaffold:scheme
+	// +kubebuilder:scaffold:scheme
 }
 ```
 

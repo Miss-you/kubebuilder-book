@@ -1,7 +1,5 @@
 # 基础项目里面有什么组件？
 
-When scaffolding out a new project, Kubebuilder provides us with a few basic pieces of boilerplate.
-
 在脚手架生成新项目时，Kubebebuilder 为我们提供了一些基本的模板。
 
 ## 创建基础设施
@@ -107,7 +105,6 @@ repo: tutorial.kubebuilder.io/project
 
 [`config/default`](https://github.com/kubernetes-sigs/kubebuilder/tree/master/docs/book/src/cronjob-tutorial/testdata/project/config/default) 在标准配置中包含 [Kustomize base](https://github.com/kubernetes-sigs/kubebuilder/blob/master/docs/book/src/cronjob-tutorial/testdata/project/config/default/kustomization.yaml) ，它用于启动控制器。
 
-Each other directory contains a different piece of configuration, refactored out into its own base:
 其他每个目录都包含一个不同的配置，重构为自己的基础。
 
 - [`config/manager`](https://github.com/kubernetes-sigs/kubebuilder/tree/master/docs/book/src/cronjob-tutorial/testdata/project/config/manager): 在集群中以pod的形式启动控制器
