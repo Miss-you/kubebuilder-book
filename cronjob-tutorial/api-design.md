@@ -1,6 +1,8 @@
 # Designing an API
 # 设计一个 API
 
+
+
 In Kubernetes, we have a few rules for how we design APIs. Namely, all
 serialized fields *must* be `camelCase`, so we use JSON struct tags to
 specify this.  We can also use the `omitempty` struct tag to mark that
