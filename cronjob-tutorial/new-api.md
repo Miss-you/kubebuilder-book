@@ -49,8 +49,6 @@ type CronJobStatus struct {
 
 接下来，我们定义与实际 Kinds 对应的类型，`CronJob` 和 `CronJobList`。`CronJob` 是我们的根类型，描述了 `CronJob` 类型。和所有 Kubernetes 对象一样，它包含了 `TypeMeta`（描述 API 版本和 Kind），还包含了 `ObjectMeta`，它保存了名称、命名空间和标签等东西。
 
-`CronJobList` is simply a container for multiple `CronJob`s.  It's the Kind used in bulk operations, like LIST.
-
 `CronJobList` 只是包含多个 `CronJob`s 的容器。它在批量操作中使用，比如 LIST 或者 MAP。
 
 一般情况下，我们不会修改这俩对象中任何一个----所有的修改都在 Spec 或 Status 中。
