@@ -6,8 +6,6 @@
 
 我们把这个过程称为 **reconciling**。
 
-In controller-runtime, the logic that implements the reconciling for a specific kind is called a [*Reconciler*](https://godoc.org/sigs.k8s.io/controller-runtime/pkg/reconcile).  A reconciler takes the name of an object, and returns whether or not we need to try again (e.g. in case of errors or periodic controllers, like the HorizontalPodAutoscaler).
-
 在 controller-runtime 中，为特定种类实现 reconciling 的逻辑被称为[* Reconciler *](https://godoc.org/sigs.k8s.io/controller-runtime/pkg/reconcile)。 Reconciler 接受一个对象的名称，并返回我们是否需要再次尝试（例如在错误或周期性控制器的情况下，如 HorizontalPodAutoscaler）。
 
 > 浅析 [emptycontroller.go](./testdata/emptycontroller.go)
@@ -40,15 +38,6 @@ type CronJobReconciler struct {
 }
 ```
 
-Most controllers eventually end up running on the cluster, so they need RBAC permissions, which we specify using controller-tools RBAC markers. These are the bare minimum permissions needed to run. As we add more functionality, we’ll need to revisit these.
-
-```
-// +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs/status,verbs=get;update;patch
-```
-
-The logging handle lets us log. controller-runtime uses structured logging through a library called logr. As we’ll see shortly, logging works by attaching key-value pairs to a static message. We can pre-assign some pairs at the top of our reconcile method to have those attached to all log lines in this reconciler.
-
 `Reconcile` 实际上是对单个对象进行对账。我们的 Request 只是有一个名字，但我们可以使用 client 从缓存中获取这个对象。
 
 我们返回一个空的结果，没有错误，这就向 controller-runtime 表明我们已经成功地对这个对象进行了对账，在有一些变化之前不需要再尝试对账。
@@ -72,10 +61,6 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 ```
 
-Finally, we add this reconciler to the manager, so that it gets started when the manager is started.
-
-For now, we just note that this reconciler operates on CronJobs. Later, we’ll use this to mark that we care about related objects as well.
-
 最后，我们将 Reconcile 添加到 manager 中，这样当 manager 启动时它就会被启动。
 
 现在，我们只是注意到这个 Reconcile 是在 CronJobs 上运行的。以后，我们也会用这个来标记其他的对象。
@@ -87,7 +72,5 @@ func (r *CronJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
         Complete(r)
 }
 ```
-
-Now that we've seen the basic structure of a reconciler, let's fill out the logic for `CronJob`s.
 
 现在我们已经了解了 Reconcile 的基本结构，我们来补充一下 `CronJob`s 的逻辑。
