@@ -18,18 +18,13 @@ The basic logic of our CronJob controller is this:
 7. Requeue when we either see a running job (done automatically) or it's
    time for the next scheduled run.
 
-我们CronJob控制器的基本逻辑是这样的。
+CronJob 控制器的基本逻辑如下：
 
-1. 加载命名的CronJob
-
-2. 列出所有活动工作，并更新状态
-
-3. 根据历史限制清理旧工作
-
-4. 检查我们是否被停职（如果被停职就不要做其他事情了
-
+1. 加载已命名的 CronJob
+2. 列出所有活跃 job，并更新状态
+3. 根据历史限制清理旧 job
+4. 检查我们是否被停止（如果被停止就不要做其他事情了
 5. 获取下一次计划运行
-
 6. 如果按计划运行一项新的工作，不超过截止日期，不
    被我们的并发策略阻止
 
