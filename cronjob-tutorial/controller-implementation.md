@@ -1,21 +1,11 @@
 # 实现控制器
 
-The basic logic of our CronJob controller is this:
+1. Get the next scheduled run
 
-1. Load the named CronJob
-
-2. List all active jobs, and update the status
-
-3. Clean up old jobs according to the history limits
-
-4. Check if we're suspended (and don't do anything else if we are)
-
-5. Get the next scheduled run
-
-6. Run a new job if it's on schedule, not past the deadline, and not
+2. Run a new job if it's on schedule, not past the deadline, and not
    blocked by our concurrency policy
 
-7. Requeue when we either see a running job (done automatically) or it's
+3. Requeue when we either see a running job (done automatically) or it's
    time for the next scheduled run.
 
 CronJob 控制器的基本逻辑如下：
