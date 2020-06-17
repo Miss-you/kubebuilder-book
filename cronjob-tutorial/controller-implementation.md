@@ -24,9 +24,12 @@ CronJob 控制器的基本逻辑如下：
    下一次计划运行的时间。
 
 
+
 > 浅析 [cronjob_controller.go](./testdata/project/controllers/cronjob_controller.go)
 
 We’ll start out with some imports. You’ll see below that we’ll need a few more imports than those scaffolded for us. We’ll talk about each one when we use it.
+
+我们先从一些进口产品开始。下面你会看到，比起那些为我们准备的脚手架，我们还需要一些进口。我们在使用的时候会逐一讲解。
 
 ```
 package controllers
