@@ -56,6 +56,8 @@ import (
 
 Next, we’ll need a Clock, which will allow us to fake timing in our tests.
 
+接下来，我们将需要一个时钟，这将允许我们在测试中伪造时间。
+
 ```
 // CronJobReconciler reconciles a CronJob object
 type CronJobReconciler struct {
