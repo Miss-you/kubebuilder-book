@@ -70,6 +70,8 @@ type CronJobReconciler struct {
 
 We’ll mock out the clock to make it easier to jump around in time while testing, the “real” clock just calls `time.Now`.
 
+我们将模拟出时钟，以便在测试时更方便地跳转时间，"真正 "的时钟只是调用`time.Now`。
+
 ```
 type realClock struct{}
 
