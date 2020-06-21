@@ -86,6 +86,8 @@ type Clock interface {
 
 Notice that we need a few more RBAC permissions -- since we’re creating and managing jobs now, we’ll need permissions for those, which means adding a couple more markers.
 
+请注意，我们需要更多的RBAC权限--因为我们现在正在创建和管理作业，所以我们需要这些权限，这意味着要增加几个标记。
+
 ```
 // +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs/status,verbs=get;update;patch
