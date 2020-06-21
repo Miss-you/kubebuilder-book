@@ -4,24 +4,19 @@
 
 1. Get the next scheduled run
 
-2. Run a new job if it's on schedule, not past the deadline, and not
-   blocked by our concurrency policy
+2. Run a new job if it's on schedule, not past the deadline, and not blocked by our concurrency policy
 
-3. Requeue when we either see a running job (done automatically) or it's
-   time for the next scheduled run.
+3. Requeue when we either see a running job (done automatically) or it's time for the next scheduled run.
 
 CronJob 控制器的基本逻辑如下：
 
-1. 加载已命名的 CronJob
-2. 列出所有活跃 job，并更新状态
-3. 根据历史限制清理旧 job
-4. 检查我们是否被停止（如果被停止就不要做其他事情了
-5. 获取下一次需要运行的 job
-6. 如果按计划运行一项新的工作，不超过截止日期，不
-   被我们的并发策略阻止
-
-7. 当我们看到一个正在运行的作业（自动完成），或者它是
-   下一次计划运行的时间。
+1. 加载 CronJob 配置
+2. 列出所有活跃 Job，并更新状态
+3. 根据历史限制清理旧 Job
+4. 检查控制器本身是否被停止（如果被停止就不要做其他事情了
+5. 获取下一次需要运行的 Job
+6. 若到达预定时间，没有超过截止日期，并且没有被并发策略所阻止，那么就运行一个新的 Job
+7. Requeue当我们看到一个正在运行的作业（自动完成）或者是到了下一个计划运行的时间。
 
 
 
