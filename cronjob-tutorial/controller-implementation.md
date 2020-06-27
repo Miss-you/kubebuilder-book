@@ -2,7 +2,7 @@
 
 CronJob 控制器的基本逻辑如下：
 
-1. 加载 CronJob 配置
+1. 按名称加载 CronJob
 2. 列出所有活跃 Job，并更新状态
 3. 根据历史限制清理旧 Job
 4. 检查控制器本身是否被停止（如果被停止就不要做其他事情了
@@ -37,9 +37,7 @@ import (
 )
 ```
 
-Next, we’ll need a Clock, which will allow us to fake timing in our tests.
-
-接下来，我们将需要一个时钟，这将允许我们在测试中伪造时间。
+接下来，我们将需在 CronJobReconciler 类型中定义一个时钟，这将允许我们在测试中伪造时间。
 
 ```
 // CronJobReconciler reconciles a CronJob object
@@ -51,9 +49,7 @@ type CronJobReconciler struct {
 }
 ```
 
-We’ll mock out the clock to make it easier to jump around in time while testing, the “real” clock just calls `time.Now`.
-
-我们将模拟出时钟，以便在测试时更方便地跳转时间，"真正 "的时钟只是调用`time.Now`。
+我们对时钟进行插桩，以便在测试时更方便地跳转和伪造时间，"真正"的时钟只是调用`time.Now`。
 
 ```
 type realClock struct{}
@@ -67,9 +63,7 @@ type Clock interface {
 }
 ```
 
-Notice that we need a few more RBAC permissions -- since we’re creating and managing jobs now, we’ll need permissions for those, which means adding a couple more markers.
-
-请注意，我们需要更多的RBAC权限--因为我们现在正在创建和管理作业，所以我们需要这些权限，这意味着要增加几个标记。
+注意：因为我们现在需要创建和管理 Job，所以我们需要更多的RBAC权限，这意味着要增加几个标记。
 
 ```
 // +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
@@ -78,7 +72,7 @@ Notice that we need a few more RBAC permissions -- since we’re creating and ma
 // +kubebuilder:rbac:groups=batch,resources=jobs/status,verbs=get
 ```
 
-Now, we get to the heart of the controller -- the reconciler logic.
+现在，我们进入控制器的核心 -- reconciler 逻辑。
 
 ```
 var (
@@ -90,11 +84,11 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
     log := r.Log.WithValues("cronjob", req.NamespacedName)
 ```
 
-## 1: Load the CronJob by name
+## 1: 按名称加载 CronJob
 
-We’ll fetch the CronJob using our client. All client methods take a context (to allow for cancellation) as their first argument, and the object in question as their last. Get is a bit special, in that it takes a NamespacedName as the middle argument (most don’t have a middle argument, as we’ll see below).
+我们将使用 client 库来获取 CronJob。所有的 client 方法都以一个上下文（上下文允许停止操作）作为第一个参数，以相关对象作为最后一个参数。Get方法有点特殊，因为它使用一个 NamespacedName 作为中间参数（大多数方法没有中间参数，我们将在下面看到）。
 
-Many client methods also take variadic options at the end.
+许多 client 方法也会在最后取变量选项。
 
 ```
     var cronJob batch.CronJob
@@ -107,7 +101,7 @@ Many client methods also take variadic options at the end.
     }
 ```
 
-## 2: List all active jobs, and update the status
+## 2: 列出所有活跃 Job，并更新状态
 
 To fully update our status, we’ll need to list all child jobs in this namespace that belong to this CronJob. Similarly to Get, we can use the List method to list the child jobs. Notice that we use variadic options to set the namespace and field match (which is actually an index lookup that we set up below).
 
