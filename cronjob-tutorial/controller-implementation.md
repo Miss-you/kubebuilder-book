@@ -1,13 +1,5 @@
 # 实现控制器
 
-
-
-1. Get the next scheduled run
-
-2. Run a new job if it's on schedule, not past the deadline, and not blocked by our concurrency policy
-
-3. Requeue when we either see a running job (done automatically) or it's time for the next scheduled run.
-
 CronJob 控制器的基本逻辑如下：
 
 1. 加载 CronJob 配置
@@ -16,15 +8,11 @@ CronJob 控制器的基本逻辑如下：
 4. 检查控制器本身是否被停止（如果被停止就不要做其他事情了
 5. 获取下一次需要运行的 Job
 6. 若到达预定时间，没有超过截止日期，并且没有被并发策略所阻止，那么就运行一个新的 Job
-7. Requeue当我们看到一个正在运行的作业（自动完成）或者是到了下一个计划运行的时间。
-
-
+7. 当我们看到一个正在运行的作业（自动完成）或者是到了下一个计划运行的时间，将其重新加入队列
 
 > 浅析 [cronjob_controller.go](./testdata/project/controllers/cronjob_controller.go)
 
-We’ll start out with some imports. You’ll see below that we’ll need a few more imports than those scaffolded for us. We’ll talk about each one when we use it.
-
-我们先从一些进口产品开始。下面你会看到，比起那些为我们准备的脚手架，我们还需要一些进口。我们在使用的时候会逐一讲解。
+我们先从 `import` 开始。下面你会看到，比起那些脚手架为我们生成的 `import`，我们还需要额外 `import` 其他库，我们会在使用的时候逐一讲解。
 
 ```
 package controllers
