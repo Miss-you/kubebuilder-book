@@ -105,6 +105,8 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 To fully update our status, we’ll need to list all child jobs in this namespace that belong to this CronJob. Similarly to Get, we can use the List method to list the child jobs. Notice that we use variadic options to set the namespace and field match (which is actually an index lookup that we set up below).
 
+为了完全更新我们的状态，我们需要列出这个命名空间中属于这个CronJob的所有子作业。与Get类似，我们可以使用List方法来列出子作业。请注意，我们使用变量选项来设置命名空间和字段匹配（这实际上是我们在下面设置的索引查找）。
+
 ```
     var childJobs kbatch.JobList
     if err := r.List(ctx, &childJobs, client.InNamespace(req.Namespace), client.MatchingFields{jobOwnerKey: req.Name}); err != nil {
@@ -114,11 +116,17 @@ To fully update our status, we’ll need to list all child jobs in this namespac
 ```
 
 > What is this index about?
+> 这个索引是关于什么的呢？
 > The reconciler fetches all jobs owned by the cronjob for the status. As our number of cronjobs increases, looking these up can become quite slow as we have to filter through all of them. For a more efficient lookup, these jobs will be indexed locally on the controller's name. A jobOwnerKey field is added to the cached job objects. This key references the owning controller and functions as the index. Later in this document we will configure the manager to actually index this field.
+> 调解器获取cronjob拥有的所有作业的状态。随着我们的cronjob数量的增加，查找这些工作会变得相当慢，因为我们必须过滤掉所有的cronjob。为了更高效的查找，这些作业将在控制器的名称上进行本地索引。一个 jobOwnerKey 字段被添加到缓存的作业对象中。这个键引用了拥有的控制器，并作为索引的功能。在本文档的后面，我们将配置管理器来实际索引这个字段。
 
 Once we have all the jobs we own, we’ll split them into active, successful, and failed jobs, keeping track of the most recent run so that we can record it in status. Remember, status should be able to be reconstituted from the state of the world, so it’s generally not a good idea to read from the status of the root object. Instead, you should reconstruct it every run. That’s what we’ll do here.
 
+一旦我们拥有了所有的作业，我们将把它们分成活动的、成功的和失败的作业，跟踪最近运行的作业，这样我们就可以把它记录在状态中。请记住，状态应该能够从世界的状态中重建，所以一般来说，从根对象的状态中读取不是一个好主意。相反，你应该在每次运行时重新构造它。这就是我们在这里要做的。
+
 We can check if a job is “finished” and whether it succeeded or failed using status conditions. We’ll put that logic in a helper to make our code cleaner.
+
+我们可以使用状态条件来检查一个作业是否 "完成 "以及它是成功还是失败。我们会把这个逻辑放在一个辅助程序中，以使我们的代码更简洁。
 
 ```
     // find the active list of jobs
@@ -129,6 +137,8 @@ We can check if a job is “finished” and whether it succeeded or failed using
 ```
 
 We consider a job “finished” if it has a “succeeded” or “failed” condition marked as true. Status conditions allow us to add extensible status information to our objects that other humans and controllers can examine to check things like completion and health.
+
+如果一个作业的 "成功 "或 "失败 "条件被标记为真，我们就认为它 "完成 "了。状态条件允许我们将可扩展的状态信息添加到我们的对象中，其他人类和控制器可以检查诸如完成和健康状况。
 
 ```
     isJobFinished := func(job *kbatch.Job) (bool, kbatch.JobConditionType) {
@@ -143,6 +153,8 @@ We consider a job “finished” if it has a “succeeded” or “failed” con
 ```
 
 We’ll use a helper to extract the scheduled time from the annotation that we added during job creation.
+
+我们将使用一个助手从我们在创建作业时添加的注解中提取计划时间。
 
 ```
     getScheduledTimeForJob := func(job *kbatch.Job) (*time.Time, error) {
@@ -202,13 +214,19 @@ We’ll use a helper to extract the scheduled time from the annotation that we a
 
 Here, we’ll log how many jobs we observed at a slightly higher logging level, for debugging. Notice how instead of using a format string, we use a fixed message, and attach key-value pairs with the extra information. This makes it easier to filter and query log lines.
 
+在这里，我们将以稍高的日志级别记录我们观察到的作业数量，以便进行调试。请注意，我们没有使用格式字符串，而是使用固定的消息，并附加键值对与额外信息。这使得过滤和查询日志行更加容易。
+
 ```
     log.V(1).Info("job count", "active jobs", len(activeJobs), "successful jobs", len(successfulJobs), "failed jobs", len(failedJobs))
 ```
 
 Using the date we’ve gathered, we’ll update the status of our CRD. Just like before, we use our client. To specifically update the status subresource, we’ll use the Status part of the client, with the Update method.
 
+使用我们收集到的日期，我们将更新CRD的状态。就像之前一样，我们使用我们的客户端。为了具体更新状态子资源，我们将使用客户端的状态部分，并使用更新方法。
+
 The status subresource ignores changes to spec, so it’s less likely to conflict with any other updates, and can have separate permissions.
+
+状态子资源会忽略规格的变化，所以它不太可能与任何其他更新发生冲突，并且可以有单独的权限。
 
 ```
     if err := r.Status().Update(ctx, &cronJob); err != nil {
@@ -219,9 +237,13 @@ The status subresource ignores changes to spec, so it’s less likely to conflic
 
 Once we’ve updated our status, we can move on to ensuring that the status of the world matches what we want in our spec.
 
-## 3: Clean up old jobs according to the history limit
+一旦我们更新了我们的状态，我们就可以继续确保世界的状态与我们的规范中所希望的一致。
+
+## 3: 根据历史限制清理旧 Job
 
 First, we’ll try to clean up old jobs, so that we don’t leave too many lying around.
+
+首先，我们会尽量清理旧的工作，以免留下太多闲置的工作。
 
 ```
     // NB: deleting these is "best effort" -- if we fail on a particular one,
@@ -265,9 +287,11 @@ First, we’ll try to clean up old jobs, so that we don’t leave too many lying
     }
 ```
 
-## 4: Check if we’re suspended
+## 4: 检查控制器本身是否被停止
 
 If this object is suspended, we don’t want to run any jobs, so we’ll stop now. This is useful if something’s broken with the job we’re running and we want to pause runs to investigate or putz with the cluster, without deleting the object.
+
+如果这个对象被暂停，我们就不想运行任何作业，所以我们现在就停止。如果我们正在运行的作业出了问题，我们想暂停运行以调查或处理集群，而不删除对象，那么这个方法就很有用。
 
 ```
     if cronJob.Spec.Suspend != nil && *cronJob.Spec.Suspend {
@@ -276,7 +300,7 @@ If this object is suspended, we don’t want to run any jobs, so we’ll stop no
     }
 ```
 
-## 5: Get the next scheduled run
+## 5: 获取下一次需要运行的 Job
 
 If we’re not paused, we’ll need to calculate the next scheduled run, and whether or not we’ve got a run that we haven’t processed yet.
 
@@ -285,6 +309,14 @@ We’ll calculate the next scheduled time using our helpful cron library. We’l
 If there are too many missed runs and we don’t have any deadlines set, we’ll bail so that we don’t cause issues on controller restarts or wedges.
 
 Otherwise, we’ll just return the missed runs (of which we’ll just use the latest), and the next run, so that we can know when it’s time to reconcile again.
+
+如果我们没有暂停，我们就需要计算下一个计划运行的时间，以及我们是否有一个尚未处理的运行。
+
+我们将使用我们有用的cron库计算下一个计划时间。我们将从上一次运行开始计算合适的时间，如果找不到上一次运行，则从CronJob的创建开始计算。
+
+如果错过的运行次数太多，而我们又没有设定任何截止时间，我们就会放弃，这样就不会在控制器重启或楔子上造成问题。
+
+否则，我们只会返回遗漏的运行（其中我们只用最新的），以及下一次运行，这样我们就可以知道什么时候该再次对账。
 
 ```
     getNextSchedule := func(cronJob *batch.CronJob, now time.Time) (lastMissed time.Time, next time.Time, err error) {
@@ -352,14 +384,19 @@ Otherwise, we’ll just return the missed runs (of which we’ll just use the la
 
 We’ll prep our eventual request to requeue until the next job, and then figure out if we actually need to run.
 
+我们将准备我们最终的请求重新排队，直到下一个作业，然后弄清楚我们是否真的需要运行。
+
 ```
     scheduledResult := ctrl.Result{RequeueAfter: nextRun.Sub(r.Now())} // save this so we can re-use it elsewhere
     log = log.WithValues("now", r.Now(), "next run", nextRun)
 ```
 
 ## 6: Run a new job if it’s on schedule, not past the deadline, and not blocked by our concurrency policy
+## 6: 若到达预定时间，没有超过截止日期，并且没有被并发策略所阻止，那么就运行一个新的 Job
 
 If we’ve missed a run, and we’re still within the deadline to start it, we’ll need to run a job.
+
+如果我们错过了一次运行，而我们还在最后期限内开始运行，我们就需要运行一次作业。
 
 ```
     if missedRun.IsZero() {
@@ -381,6 +418,8 @@ If we’ve missed a run, and we’re still within the deadline to start it, we�
 ```
 
 If we actually have to run a job, we’ll need to either wait till existing ones finish, replace the existing ones, or just add new ones. If our information is out of date due to cache delay, we’ll get a requeue when we get up-to-date information.
+
+如果我们真的要运行一个作业，我们需要等待现有的作业完成，替换现有的作业，或者直接添加新的作业。如果我们的信息由于缓存延迟而过时，当我们得到最新的信息时，我们会得到一个requeue。
 
 ```
     // figure out how to run this job -- concurrency policy might forbid us from running
@@ -409,6 +448,14 @@ We need to construct a job based on our CronJob’s template. We’ll copy over 
 Then, we’ll set the “scheduled time” annotation so that we can reconstitute our LastScheduleTime field each reconcile.
 
 Finally, we’ll need to set an owner reference. This allows the Kubernetes garbage collector to clean up jobs when we delete the CronJob, and allows controller-runtime to figure out which cronjob needs to be reconciled when a given job changes (is added, deleted, completes, etc).
+
+一旦我们想好了如何处理现有的工作，我们就会实际创建我们所需的工作。
+
+我们需要基于CronJob的模板来构造一个作业。我们将从模板中复制过来的规范，并复制一些基本的对象元。
+
+然后，我们将设置 "计划时间 "注解，以便我们可以在每次对账时重新构造LastScheduleTime字段。
+
+最后，我们需要设置一个所有者引用。这允许Kubernetes垃圾收集器在我们删除CronJob时清理作业，并允许controller-runtime在给定作业发生变化（被添加、删除、完成等）时，找出哪个cronjob需要进行调节。
 
 ```
     constructJobForCronJob := func(cronJob *batch.CronJob, scheduledTime time.Time) (*kbatch.Job, error) {
@@ -454,9 +501,11 @@ Finally, we’ll need to set an owner reference. This allows the Kubernetes garb
     log.V(1).Info("created Job for CronJob run", "job", job)
 ```
 
-## 7: Requeue when we either see a running job or it’s time for the next scheduled run
+## 7: 当我们看到一个正在运行的作业（自动完成）或者是到了下一个计划运行的时间，将其重新加入队列
 
 Finally, we’ll return the result that we prepped above, that says we want to requeue when our next run would need to occur. This is taken as a maximum deadline -- if something else changes in between, like our job starts or finishes, we get modified, etc, we might reconcile again sooner.
+
+最后，我们会返回上面我们准备的结果，说我们要重新排队，当我们的下一次运行需要发生。这是作为一个最大的截止日期--如果中间有其他的变化，比如我们的作业开始或结束，我们被修改了等等，我们可能会更快地再次对账。
 
 ```
     // we'll requeue once we see the running job, and update our status
@@ -464,11 +513,15 @@ Finally, we’ll return the result that we prepped above, that says we want to r
 }
 ```
 
-## Setup
+## 安装
 
 Finally, we’ll update our setup. In order to allow our reconciler to quickly look up Jobs by their owner, we’ll need an index. We declare an index key that we can later use with the client as a pseudo-field name, and then describe how to extract the indexed value from the Job object. The indexer will automatically take care of namespaces for us, so we just have to extract the owner name if the Job has a CronJob owner.
 
 Additionally, we’ll inform the manager that this controller owns some Jobs, so that it will automatically call Reconcile on the underlying CronJob when a Job changes, is deleted, etc.
+
+最后，我们会更新我们的设置。为了让我们的对账器能够根据作业的所有者快速查找作业，我们需要一个索引。我们声明一个索引键，以后我们可以用它作为客户端的伪字段名，然后描述如何从Job对象中提取索引值。索引器会自动为我们处理命名空间，所以如果Job有CronJob所有者，我们只需要提取所有者名称即可。
+
+另外，我们会通知管理器这个控制器拥有一些Job，这样当一个Job发生变化、被删除等情况时，它就会自动调用底层CronJob的Reconcile。
 
 ```
 var (
@@ -507,5 +560,6 @@ func (r *CronJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 ```
 
-That was a doozy, but now we've got a working controller.  Let's test
-against the cluster, then, if we don't have any issues, deploy it!
+That was a doozy, but now we've got a working controller.  Let's test against the cluster, then, if we don't have any issues, deploy it!
+
+这真是个大麻烦，但现在我们已经有了一个工作控制器。 让我们来测试一下 对照集群，然后，如果我们没有任何问题，部署它!
