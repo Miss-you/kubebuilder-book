@@ -68,8 +68,9 @@ type Clock interface {
 ```
 // +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch.tutorial.kubebuilder.io,resources=cronjobs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=batch,resources=jobs/status,verbs=get
+// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete //新增
+// +kubebuilder:rbac:groups=batch,resources=jobs/status,verbs=get //新增
+
 ```
 
 现在，我们进入控制器的核心 -- reconciler 逻辑。
@@ -105,7 +106,7 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 To fully update our status, we’ll need to list all child jobs in this namespace that belong to this CronJob. Similarly to Get, we can use the List method to list the child jobs. Notice that we use variadic options to set the namespace and field match (which is actually an index lookup that we set up below).
 
-为了完全更新我们的状态，我们需要列出这个命名空间中属于这个CronJob的所有子作业。与Get类似，我们可以使用List方法来列出子作业。请注意，我们使用变量选项来设置命名空间和字段匹配（这实际上是我们在下面设置的索引查找）。
+为了完全更新我们的状态，我们需要列出这个命名空间中属于这个 CronJob 的所有子 Job。与Get类似，我们可以使用 List 方法来列出子 Job。注意，我们使用变量选项来设置命名空间和字段匹配（它实际上是我们在后面配置的索引检索）。
 
 ```
     var childJobs kbatch.JobList
