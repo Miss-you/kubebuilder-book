@@ -104,8 +104,6 @@ func (r *CronJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 ## 2: 列出所有活跃 Job，并更新状态
 
-To fully update our status, we’ll need to list all child jobs in this namespace that belong to this CronJob. Similarly to Get, we can use the List method to list the child jobs. Notice that we use variadic options to set the namespace and field match (which is actually an index lookup that we set up below).
-
 为了完全更新我们的状态，我们需要列出这个命名空间中属于这个 CronJob 的所有子 Job。与Get类似，我们可以使用 List 方法来列出子 Job。注意，我们使用变量选项来设置命名空间和字段匹配（它实际上是我们在后面配置的索引检索）。
 
 ```
@@ -116,8 +114,7 @@ To fully update our status, we’ll need to list all child jobs in this namespac
     }
 ```
 
-> What is this index about?
-> 这个索引是关于什么的呢？
+> 这个索引有什么作用？
 > The reconciler fetches all jobs owned by the cronjob for the status. As our number of cronjobs increases, looking these up can become quite slow as we have to filter through all of them. For a more efficient lookup, these jobs will be indexed locally on the controller's name. A jobOwnerKey field is added to the cached job objects. This key references the owning controller and functions as the index. Later in this document we will configure the manager to actually index this field.
 > 调解器获取cronjob拥有的所有作业的状态。随着我们的cronjob数量的增加，查找这些工作会变得相当慢，因为我们必须过滤掉所有的cronjob。为了更高效的查找，这些作业将在控制器的名称上进行本地索引。一个 jobOwnerKey 字段被添加到缓存的作业对象中。这个键引用了拥有的控制器，并作为索引的功能。在本文档的后面，我们将配置管理器来实际索引这个字段。
 
